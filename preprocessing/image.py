@@ -15,7 +15,7 @@ class ImageToTensorPreprocessor(ImagePreprocessor):
         # store the image data format
         self.dataFormat = dataFormat
 
-    def preprocess(self, data):
+    def preprocess(self, data: np.array):
         # Rearrange the dimensions of the image and flatten
         return img_to_array(data, data_format=self.dataFormat)
 
