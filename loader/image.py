@@ -56,7 +56,6 @@ class ImageDataset(Dataset, PandasDatasetMixin):
         else:
             raise ValueError('dataset must point to an image directory or pandas dataframe file')
 
-
     def clean(self, properties):
         # Duplicates: properties['duplicates']
         # Blurry images from variance of laplacian: properties['blurry']
