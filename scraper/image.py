@@ -37,6 +37,14 @@ class BingImageScraper(Scraper):
         :return: Number of downloaded images
         """
         N = 0
+
+        # Create label directory
+        # Source: https://stackoverflow.com/questions/273192/how-can-i-safely-create-a-nested-directory-in-python
+        label_dir = os.path.join(self.output_dir, label.replace(' ', '_'))
+        if not os.path.exists(label_dir):
+            os.makedirs(label_dir)
+            print('[WARNING] Output directory did not exist, so it was created')
+
         """
         # Possible exceptions
         """
@@ -117,7 +125,7 @@ class BingImageScraper(Scraper):
                                 print("[WARNING] invalid extension, truncating extension: {}".format(v["contentUrl"]))
                         # path in format 'outputPath/number.ext'
                         p = os.path.sep.join(
-                            [self.output_dir, label,
+                            [label_dir,
                              "{}{}".format(str(N).zfill(8), ext)]
                         )
                         # Write to disk
