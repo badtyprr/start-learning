@@ -19,6 +19,11 @@ class BingImageScraper(Scraper):
                  *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.subscription_key = subscription_key
+        self.max_results = max_results
+        self.group_size = group_size
+        self.timeout = timeout
+        self.min_width = min_width
+        self.min_height = min_height
         self.initializeAzure()
 
     def initializeAzure(self):
