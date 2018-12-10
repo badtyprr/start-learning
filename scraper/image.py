@@ -2,6 +2,7 @@
 
 # Python Packages
 import os
+import re
 # 3rd Party Packages
 import requests
 import cv2
@@ -36,15 +37,31 @@ class BingImageScraper(Scraper):
         :param label: the label/directory name to save images to
         :return: Number of downloaded images
         """
-        N = 0
 
-        # Create label directory
-        # Source: https://stackoverflow.com/questions/273192/how-can-i-safely-create-a-nested-directory-in-python
         label_dir = os.path.join(self.output_dir, label.replace(' ', '_'))
+        # Doesn't exist
         if not os.path.exists(label_dir):
+            # Create label directory
+            # Source: https://stackoverflow.com/questions/273192/how-can-i-safely-create-a-nested-directory-in-python
             os.makedirs(label_dir)
             print('[WARNING] Output directory did not exist, so it was created')
-
+            N_start = 0
+        # Does exist
+        else:
+            # Determine the image count in the label directory, and start at i+1
+            files = os.listdir(label_dir)
+            N_start = 0
+            for file in files:
+                # Matches image files that are in the format *[enumeration].[ext]
+                # Thanks: https://javascript.info/regexp-greedy-and-lazy
+                re_pattern = r'.*?(\d+)\..*'
+                re_filenumber = re.compile(re_pattern, re.ASCII)
+                filenumber = int(re_filenumber.fullmatch(file).group(1))
+                N_start = max(N_start, filenumber)
+        # Start on the next file
+        N_start += 1
+        # Continuously update N_end until the last image is downloaded
+        N_end = N_start
         """
         # Possible exceptions
         """
@@ -52,7 +69,8 @@ class BingImageScraper(Scraper):
             IOError, FileNotFoundError,
             requests.RequestException, requests.HTTPError,
             requests.ConnectionError, requests.Timeout,
-            requests.exceptions.SSLError, requests.exceptions.ConnectTimeout
+            requests.exceptions.SSLError, requests.exceptions.ConnectTimeout,
+            requests.TooManyRedirects, requests.exceptions.ContentDecodingError
         ]
         """
         # Possible image extensions
@@ -126,7 +144,7 @@ class BingImageScraper(Scraper):
                         # path in format 'outputPath/number.ext'
                         p = os.path.sep.join(
                             [label_dir,
-                             "{}{}".format(str(N).zfill(8), ext)]
+                             "{}{}".format(str(N_end).zfill(8), ext)]
                         )
                         # Write to disk
                         f = open(p, "wb")
@@ -146,9 +164,11 @@ class BingImageScraper(Scraper):
                         print("[WARNING] deleting corrupted image: {}".format(p))
                         os.remove(p)
                     # Found a good image, go to the next
-                    N += 1
+                    N_end += 1
         except requests.HTTPError as e:
             # Sometimes you'll get this error if you entered the wrong subscription key
             # Source: https://blogs.msdn.microsoft.com/kwill/2017/05/17/http-401-access-denied-when-calling-azure-cognitive-services-apis/
             print(e)
-        return N
+        # Return the end index less start index
+        return N_end-N_start+1
+
