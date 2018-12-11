@@ -21,7 +21,7 @@ class ImageDataset(Dataset, PandasDatasetMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def load(self, dataset_path: Union[str, Path], verbosity=-1):
+    def load(self, dataset_path: Union[str, Path], verbosity=-1) -> (np.array, np.array):
         data = []
         labels = []
 
@@ -61,8 +61,7 @@ class ImageDataset(Dataset, PandasDatasetMixin):
                 self.load_dataframe(dataset_path)
                 # DataFrame is in self.dataframe
                 # NOTE: Kaggle Whales will take 4,529,677,488 bytes of RAM if downsized to 244x244x3
-
-
+                raise NotImplementedError('Loading images from a Pandas dataframe is not yet supported')
             else:
                 raise ValueError('dataset path does not exist')
 
