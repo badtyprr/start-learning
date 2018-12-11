@@ -63,6 +63,7 @@ class ResizePreprocessor(ImagePreprocessor):
                 scaleFactor = float(width) / w
                 image = cv2.resize(
                     image,
+                    dsize=None,
                     fx=scaleFactor,
                     fy=scaleFactor
                 )
@@ -73,6 +74,7 @@ class ResizePreprocessor(ImagePreprocessor):
                 scaleFactor = float(height) / h
                 image = cv2.resize(
                     image,
+                    dsize=None,
                     fx=scaleFactor,
                     fy=scaleFactor
                 )

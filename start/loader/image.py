@@ -21,37 +21,44 @@ class ImageDataset(Dataset, PandasDatasetMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def load(self, dataset: Union[str, Path], verbosity=-1):
+    def load(self, dataset_path: Union[str, Path], verbosity=-1):
         data = []
         labels = []
 
-        if isinstance(dataset, Path) or isinstance(dataset, str):
+        if isinstance(dataset_path, Path) or isinstance(dataset_path, str):
             # If an image directory is given, load images by walking through
-            if os.path.isdir(dataset):
+            if os.path.isdir(dataset_path):
                 # Read data from image paths
-                for (i, imagePath) in enumerate(os.listdir(dataset)):
+                for label in os.listdir(dataset_path):
+                    i = 0
                     # Read image and get path
-                    image = cv2.imread(imagePath)
-                    label = imagePath.split(os.path.sep)[-2]
+                    print('[INFO] Processing label: {}'.format(label))
+                    try:
+                        label_path = os.path.join(dataset_path, label)
+                        for image_path in os.listdir(label_path):
+                            image = cv2.imread(os.path.join(label_path, image_path))
+                            # Only process images that can be read
+                            if image is not None:
+                                # Pre-process image
+                                for p in self.preprocessors:
+                                    image = p.preprocess(image)
 
-                    # Only process images that can be read
-                    if image is not None:
-                        # Pre-process image
-                        for p in self.preprocessors:
-                            image = p.preprocess(image)
+                                # Add to data and labels
+                                data.append(image)
+                                labels.append(label)
+                                i += 1
 
-                        # Add to data and labels
-                        data.append(image)
-                        labels.append(label)
-
-                    # Update every 'verbosity' images
-                    if verbosity > 0 and i > 0 and (i + 1) % verbosity == 0:
-                        print("[INFO] processed {}/{}".format(i + 1, len(dataset)))
+                            # Update every 'verbosity' images
+                            if verbosity > 0 and i % verbosity == 0:
+                                print("[INFO] processed {} {} images".format(i, label))
+                    # Not a directory, and therefore, not a label
+                    except (FileNotFoundError, NotADirectoryError):
+                        pass
 
                 return np.array(data), np.array(labels)
             # If a pandas dataframe is loaded, load images from paths
-            elif os.path.isfile(dataset):
-                self.load_dataframe(dataset)
+            elif os.path.isfile(dataset_path):
+                self.load_dataframe(dataset_path)
                 # DataFrame is in self.dataframe
                 # NOTE: Kaggle Whales will take 4,529,677,488 bytes of RAM if downsized to 244x244x3
 

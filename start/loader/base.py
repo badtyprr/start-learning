@@ -13,7 +13,7 @@ class Dataset(ABC):
             self.preprocessors = preprocessors
 
     @abstractmethod
-    def load(self, dataset: Union[str, Path], verbosity=-1):
+    def load(self, dataset_path: Union[str, Path], verbosity=-1):
         pass
 
     @abstractmethod
