@@ -35,22 +35,24 @@ class ImageDataset(Dataset, PandasDatasetMixin):
                     print('[INFO] Processing label: {}'.format(label))
                     try:
                         label_path = os.path.join(dataset_path, label)
-                        for image_path in os.listdir(label_path):
-                            image = cv2.imread(os.path.join(label_path, image_path))
-                            # Only process images that can be read
-                            if image is not None:
-                                # Pre-process image
-                                for p in self.preprocessors:
-                                    image = p.preprocess(image)
+                        for root, dirs, files in os.walk(label_path):
+                            for file in files:
+                                image_path = os.path.join(root, file)
+                                image = cv2.imread(os.path.join(label_path, image_path))
+                                # Only process images that can be read
+                                if image is not None:
+                                    # Pre-process image
+                                    for p in self.preprocessors:
+                                        image = p.preprocess(image)
 
-                                # Add to data and labels
-                                data.append(image)
-                                labels.append(label)
-                                i += 1
+                                    # Add to data and labels
+                                    data.append(image)
+                                    labels.append(label)
+                                    i += 1
 
-                            # Update every 'verbosity' images
-                            if verbosity > 0 and i % verbosity == 0:
-                                print("[INFO] processed {} {} images".format(i, label))
+                                # Update every 'verbosity' images
+                                if verbosity > 0 and i % verbosity == 0:
+                                    print("[INFO] processed {} {} images".format(i, label))
                     # Not a directory, and therefore, not a label
                     except (FileNotFoundError, NotADirectoryError):
                         pass
