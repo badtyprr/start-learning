@@ -70,7 +70,8 @@ class BingImageScraper(Scraper):
             requests.RequestException, requests.HTTPError,
             requests.ConnectionError, requests.Timeout,
             requests.exceptions.SSLError, requests.exceptions.ConnectTimeout,
-            requests.TooManyRedirects, requests.exceptions.ContentDecodingError
+            requests.TooManyRedirects, requests.exceptions.ContentDecodingError,
+            requests.ChunkedEncodingError
         ]
         """
         # Possible image extensions
