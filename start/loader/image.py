@@ -70,6 +70,7 @@ class ImageDataset(Dataset, PandasDatasetMixin):
         else:
             raise ValueError('dataset must point to an image directory or pandas dataframe file')
 
+    @staticmethod
     def clean(self, properties: dict):
         """
 
