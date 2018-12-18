@@ -98,6 +98,7 @@ class ImageDataset(Dataset, PandasDatasetMixin):
                     if image is None:
                         # Mark for removal
                         setRemove.add(filepath)
+                        continue
                     hist = quantized_histogram(image)
                     hashable_key = (stats.st_size, tuple(hist))
                     # Try to add to existing key
