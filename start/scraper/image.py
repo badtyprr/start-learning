@@ -70,7 +70,8 @@ class BingImageScraper(Scraper):
             requests.RequestException, requests.HTTPError,
             requests.ConnectionError, requests.Timeout,
             requests.exceptions.SSLError, requests.exceptions.ConnectTimeout,
-            requests.TooManyRedirects, requests.exceptions.ContentDecodingError
+            requests.TooManyRedirects, requests.exceptions.ContentDecodingError,
+            requests.exceptions.ChunkedEncodingError
         ]
         """
         # Possible image extensions
@@ -155,7 +156,8 @@ class BingImageScraper(Scraper):
                             print("[WARNING] encountered exception: {}, skipping: {}".format(e, v["contentUrl"]))
                             continue
                         else:
-                            raise e
+                            print("[WARNING] unexpected exception: {}, skipping: {}".format(e, v["contentUrl"]))
+                            continue
                     """
                     # verify it's a good image
                     """

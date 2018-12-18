@@ -70,7 +70,8 @@ class ImageDataset(Dataset, PandasDatasetMixin):
         else:
             raise ValueError('dataset must point to an image directory or pandas dataframe file')
 
-    def clean(self, properties: dict):
+    @staticmethod
+    def clean(properties: dict):
         """
 
         :param properties: Filter images by one or more filtering methods

@@ -16,6 +16,7 @@ class Dataset(ABC):
     def load(self, dataset_path: Union[str, Path], verbosity=-1):
         pass
 
+    @staticmethod
     @abstractmethod
-    def clean(self, properties: dict):
+    def clean(properties: dict):
         pass
