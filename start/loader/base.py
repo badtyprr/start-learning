@@ -18,5 +18,5 @@ class Dataset(ABC):
 
     @abstractmethod
     @staticmethod
-    def clean(self, properties: dict):
+    def clean(properties: dict):
         pass
