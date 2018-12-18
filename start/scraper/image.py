@@ -156,7 +156,8 @@ class BingImageScraper(Scraper):
                             print("[WARNING] encountered exception: {}, skipping: {}".format(e, v["contentUrl"]))
                             continue
                         else:
-                            raise e
+                            print("[WARNING] unexpected exception: {}, skipping: {}".format(e, v["contentUrl"]))
+                            continue
                     """
                     # verify it's a good image
                     """
