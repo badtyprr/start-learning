@@ -102,8 +102,8 @@ class MobileNetV2(NeuralNetwork, FineTuningMixin):
             use_bias=True,
             kernel_initializer='glorot_uniform',
             bias_initializer='glorot_uniform',
-            kernel_regularizer=l2(0.001),
-            bias_regularizer=l2(0.001),
+            kernel_regularizer=l2(regularization_strength),
+            bias_regularizer=l2(regularization_strength),
             activity_regularizer=None,
             kernel_constraint=None,
             bias_constraint=None
@@ -115,8 +115,8 @@ class MobileNetV2(NeuralNetwork, FineTuningMixin):
             use_bias=True,
             kernel_initializer='glorot_uniform',
             bias_initializer='glorot_uniform',
-            kernel_regularizer=l2(0.001),
-            bias_regularizer=l2(0.001),
+            kernel_regularizer=l2(regularization_strength),
+            bias_regularizer=l2(regularization_strength),
             activity_regularizer=None,
             kernel_constraint=None,
             bias_constraint=None
