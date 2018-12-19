@@ -12,6 +12,9 @@ class ImageToTensorPreprocessor(ImagePreprocessor):
     def __init__(self, dataFormat=None):
         # Thanks: https://www.journaldev.com/15911/python-super
         super().__init__()
+        self.name = 'ImageToTensorPreprocessor'
+        if dataFormat:
+            self.name = self.name + '_' + str(dataFormat)
         # store the image data format
         self.dataFormat = dataFormat
 
@@ -28,6 +31,7 @@ class ResizePreprocessor(ImagePreprocessor):
             interpolation: int=cv2.INTER_AREA,
             aspect_preserving: bool=False):
         super().__init__()
+        self.name = 'ResizePreprocessor_{}x{}'.format(width, height)
         self.width = width
         self.height = height
         self.interpolation = interpolation
@@ -106,6 +110,7 @@ class ResizePreprocessor(ImagePreprocessor):
 class ColorSpacePreprocessor(ImagePreprocessor):
     def __init__(self, conversion=cv2.COLOR_BGR2GRAY):
         super().__init__()
+        self.name = 'ColorSpacePreprocessor_{}'.format(conversion)
         self.conversion = conversion
 
     def preprocess(self, data):

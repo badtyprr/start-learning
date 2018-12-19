@@ -1,3 +1,3 @@
 from .base import Dataset
-from .image import ImageDataset
-from .pandas import PandasDatasetMixin
+from .image import ImageCachedDataset
+from .pandas import CSVDatasetMixin

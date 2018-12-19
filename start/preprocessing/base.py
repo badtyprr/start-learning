@@ -9,17 +9,22 @@ import numpy as np
 class Preprocessor(ABC):
     def __init__(self):
         super().__init__()
+        self.name = 'Preprocessor'
 
     @abstractmethod
     def preprocess(self, data):
         return data
 
+    def __str__(self):
+        return self.name
+
 
 class ImagePreprocessor(Preprocessor):
     def __init__(self):
         super().__init__()
+        self.name = 'ImagePreprocessor'
 
-    def preprocess(self, data: np.array):
+    def preprocess(self, data: np.array) -> np.array:
         # Do nothing by default
         return data
 
