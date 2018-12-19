@@ -79,7 +79,7 @@ class CachedDataset(Dataset):
             self.cache_path = cache_path
         else:
             # Ignore when reading labels
-            self._cache_folder_name = 'cache'
+            self._cache_folder_name = r'.cache'
             # Defaults to dataset_path/cache
             self.cache_path = os.path.join(self.dataset_path, self._cache_folder_name)
 
