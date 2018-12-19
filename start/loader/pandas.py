@@ -13,7 +13,9 @@ class CSVDatasetMixin(Dataset):
         # Add handler for files
         self.handlers['csv'] = self._csv_dataframe_handler
 
-    def _csv_dataframe_handler(self):
+    def _csv_dataframe_handler(self, properties: dict=None):
+        if not properties:
+            properties = {}
         self.dataframe = pd.read_csv(self.dataset_path)
         raise NotImplementedError('Loading images from a Pandas dataframe is not yet supported')
 
