@@ -2,6 +2,6 @@
 
 from .base import DimensionalReductionFeature
 
-class PCA(DimensionalReductionFeature):
+class PCAFeature(DimensionalReductionFeature):
     pass
 
