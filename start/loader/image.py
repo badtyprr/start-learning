@@ -18,7 +18,7 @@ class ImageCachedDataset(CachedDataset, CSVDatasetMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def _cached_directory_handler(self, verbosity: int):
+    def _cached_directory_handler(self, verbosity: int) -> (np.array, np.array):
         """
         When dataset path is a directory, treat it as a folder structured labeling system
         :param directory: Path type representing a directory of data samples
@@ -55,10 +55,10 @@ class ImageCachedDataset(CachedDataset, CSVDatasetMixin):
             # Not a directory, and therefore, not a label
             except (FileNotFoundError, NotADirectoryError):
                 pass
+        return_val = (np.array(data), np.array(labels))
+        return return_val
 
-        return np.array(data), np.array(labels)
-
-    def _cached_retrieve(self, key: Path):
+    def _cached_retrieve(self, key: Path) -> np.array:
         """
         Retrieves a data sample from the datastore using key, preprocesses the data and caches the result
         :param key: str type representing the unique identifier that can store the data sample
@@ -159,17 +159,12 @@ class ImageCachedDataset(CachedDataset, CSVDatasetMixin):
             except FileNotFoundError:
                 print('[WARNING] Could not find file: {}'.format(item_path))
 
-    def _cached_load(self, verbosity: int = -1) -> (np.array, np.array):
+    def _cached_load(self, verbosity: int=-1) -> (np.array, np.array):
         """
         Loads a dataset, caching data as they are preprocessed.
         If cached preprocessed data exists, load it instead of preprocessing the original data.
-        :param dataset_path: Path type representing the path to the dataset's base directory
         :param verbosity: Prints every [verbosity] data loads
         :return: numpy arrays of the training and test sets
         """
-
         return self.handlers[type(self.dataset_path)](verbosity)
-
-
-
 

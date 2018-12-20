@@ -24,6 +24,11 @@ class Dataset(ABC):
 
     @abstractmethod
     def _directory_handler(self, directory: Path):
+        """
+        Handles the retrieval of a directory of data
+        :param directory: base directory of dataset
+        :return: variable type data
+        """
         pass
 
     @abstractmethod
@@ -42,6 +47,7 @@ class Dataset(ABC):
         :param key: str type representing the unique identifier that can store the data sample
         :param data: variable data type to store
         """
+        pass
 
     @abstractmethod
     def load(self, verbosity: int=-1) -> (np.array, np.array):
@@ -102,7 +108,7 @@ class CachedDataset(Dataset):
         """
         When dataset path is a directory, treat it as a folder structured labeling system
         :param directory: Path type representing a directory of data samples
-        :return:
+        :return: variable type data
         """
         pass
 
@@ -125,13 +131,12 @@ class CachedDataset(Dataset):
         pass
 
     @abstractmethod
-    def _cached_load(self, verbosity: int=-1) -> (np.array, np.array):
+    def _cached_load(self, verbosity: int=-1):
         """
         Loads a dataset, caching data as they are preprocessed.
         If cached preprocessed data exists, load it instead of preprocessing the original data.
-        :param dataset_path: Path type representing the path to the dataset's base directory
         :param verbosity: Prints every [verbosity] data loads
-        :return: numpy arrays of the training and test sets
+        :return: variable type data
         """
         pass
 
@@ -139,20 +144,51 @@ class CachedDataset(Dataset):
     def _cached_clean(self, properties: dict):
         """
         Cleans the dataset according to the properties given. Also cleans the cached images, if they exist.
+        :param properties: dict type representing parameters to execute during cleaning
         """
         pass
 
     def _directory_handler(self, directory: Path):
-        self._cached_directory_handler(directory)
+        """
+        Handles the retrieval of a directory of data
+        Implements parent class' abstract method.
+        :param directory: base directory of dataset
+        :return: variable type data
+        """
+        return self._cached_directory_handler(directory)
 
     def retrieve(self, key):
-        self._cached_retrieve(key)
+        """
+        Retrieves a data sample from the datastore using key and preprocesses the data.
+        Implements parent class' abstract method.
+        :param key: str type representing the unique identifier that can retrieve the data sample
+        :return: variable type data
+        """
+        return self._cached_retrieve(key)
 
     def store(self, key, data):
+        """
+        Stores a data sample on the datastore.
+        Implements parent class' abstract method.
+        :param key: str type representing the unique identifier that can store the data sample
+        :param data: variable data type to store
+        """
         self._cached_store(key, data)
 
     def load(self, verbosity: int=-1):
-        self._cached_load(verbosity)
+        """
+        Loads a dataset and returns as numpy arrays
+        Implements parent class' abstract method.
+        :param verbosity: Prints status every [verbosity] data loads
+        :return: numpy arrays of the training and test sets
+        """
+        return self._cached_load(verbosity)
 
     def clean(self, properties: dict):
+        """
+        Cleans the dataset according to the properties given.
+        Implements parent class' abstract method.
+        :param properties: dict type representing the parameters that define how a clean is implemented
+        """
         self._cached_clean(properties)
+
