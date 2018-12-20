@@ -73,7 +73,6 @@ class ImageCachedDataset(CachedDataset, CSVDatasetMixin):
         image = cv2.imread(os.path.join(preprocessor_path, filename), cv2.IMREAD_UNCHANGED)
         # If the image doesn't exist, then preprocess the original image and cache results along the way
         if image is None:
-            print('{} is not cached, caching preprocessors...'.format(os.path.join(preprocessor_path, filename)))
             try:
                 os.makedirs(preprocessor_path)
             except FileExistsError:
