@@ -109,17 +109,33 @@ class MobileNetV2(NeuralNetwork, FineTuningMixin):
             bias_constraint=None
         ))
         model.add(Dropout(dropout_rate))
-        model.add(Dense(
-            units=len(properties['classes']),
-            activation='softmax',
-            use_bias=True,
-            kernel_initializer='glorot_uniform',
-            bias_initializer='glorot_uniform',
-            kernel_regularizer=l2(regularization_strength),
-            bias_regularizer=l2(regularization_strength),
-            activity_regularizer=None,
-            kernel_constraint=None,
-            bias_constraint=None
-        ))
+        n_classes = len(properties['classes'])
+        if n_classes > 2:
+            model.add(Dense(
+                units=n_classes,
+                activation='softmax',
+                use_bias=True,
+                kernel_initializer='glorot_uniform',
+                bias_initializer='glorot_uniform',
+                kernel_regularizer=None,
+                bias_regularizer=None,
+                activity_regularizer=None,
+                kernel_constraint=None,
+                bias_constraint=None
+            ))
+        # Hot dog or not hot dog
+        else:
+            model.add(Dense(
+                units=1,
+                activation='sigmoid',
+                use_bias=True,
+                kernel_initializer='glorot_uniform',
+                bias_initializer='glorot_uniform',
+                kernel_regularizer=None,
+                bias_regularizer=None,
+                activity_regularizer=None,
+                kernel_constraint=None,
+                bias_constraint=None
+            ))
         return model
 

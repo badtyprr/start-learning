@@ -70,15 +70,15 @@ class ImageCachedDataset(CachedDataset, CSVDatasetMixin):
         preprocessor_path = label_path
         for p in self.preprocessors:
             preprocessor_path = os.path.join(preprocessor_path, str(p))
-        directory, filename = os.path.split(key)
-        image = cv2.imread(os.path.join(preprocessor_path, filename))
+        image = cv2.imread(os.path.join(preprocessor_path, filename), cv2.IMREAD_UNCHANGED)
         # If the image doesn't exist, then preprocess the original image and cache results along the way
         if image is None:
+            print('{} is not cached, caching preprocessors...'.format(os.path.join(preprocessor_path, filename)))
             try:
                 os.makedirs(preprocessor_path)
             except FileExistsError:
                 pass
-            image = cv2.imread(str(key))
+            image = cv2.imread(str(key), cv2.IMREAD_UNCHANGED)
             preprocessor_path = label_path
             for p in self.preprocessors:
                 preprocessor_path = os.path.join(preprocessor_path, str(p))
@@ -88,6 +88,9 @@ class ImageCachedDataset(CachedDataset, CSVDatasetMixin):
                     key=Path(os.path.join(preprocessor_path, filename)),
                     data=image
                 )
+        # Check that the shape is at least rank 3
+        if len(image.shape) < 3:
+            image = image[:,:,np.newaxis]
         # Return the final preprocessed image
         return image
 
