@@ -31,7 +31,7 @@ class ImageCachedDataset(CachedDataset, CSVDatasetMixin):
 
         # Read data from image paths
         for label in os.listdir(self.dataset_path):
-            if label in self._cache_folder_name:
+            if label in self._ignored_labels:
                 continue
             i = 0
             # Read image and get path

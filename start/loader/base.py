@@ -20,6 +20,7 @@ class Dataset(ABC):
         }
 
         self.dataset_path = dataset_path
+        self._ignored_labels = []
 
     @abstractmethod
     def _directory_handler(self, directory: Path):
@@ -80,6 +81,7 @@ class CachedDataset(Dataset):
         else:
             # Ignore when reading labels
             self._cache_folder_name = r'.cache'
+            self._ignored_labels.append(self._cache_folder_name)
             # Defaults to dataset_path/cache
             self.cache_path = os.path.join(self.dataset_path, self._cache_folder_name)
 
