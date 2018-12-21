@@ -19,8 +19,8 @@ class ImageCachedDataset(CachedDataset, CSVDatasetMixin):
         super().__init__(*args, **kwargs)
 
     def _csv_handler(self, properties: dict=None) -> (np.array, np.array):
-        # Loads pandas dataframe into self.dataframe
         super()._csv_handler(properties)
+        print('[INFO] Retrieving dataset from dataframe:\n{}'.format(self.dataframe.describe()))
         # Implements data loading
         return self._cached_csv_handler(properties)
 
@@ -28,12 +28,13 @@ class ImageCachedDataset(CachedDataset, CSVDatasetMixin):
         i = 0
         data = []
         labels = []
-        for index, row in self.dataframe.iterrows():
+        path_to, filename = os.path.split(self.dataset_path)
+        for index, row in self._dataframe.iterrows():
             if row['Id'] in self._ignored_labels:
                 continue
 
             image = self._cached_retrieve(
-                Path(os.path.join(self.dataset_path, properties.get('subdirectory', ''), row['Image']))
+                Path(os.path.join(path_to, self.subdirectory, row['Image']))
             )
             if image is None:
                 continue
@@ -45,7 +46,7 @@ class ImageCachedDataset(CachedDataset, CSVDatasetMixin):
             # Update every 'verbosity' images
             verbosity = properties.get('verbosity', -1)
             if verbosity > 0 and i % verbosity == 0:
-                print("[INFO] processed {}/{} images".format(i, self.dataframe.shape[0]))
+                print("[INFO] processed {}/{} images".format(i, self._dataframe.shape[0]))
 
         return np.array(data), np.array(labels)
 
@@ -198,18 +199,20 @@ class ImageCachedDataset(CachedDataset, CSVDatasetMixin):
             except FileNotFoundError:
                 print('[WARNING] Could not find file: {}'.format(item_path))
 
-    def _cached_load(self, verbosity: int=-1) -> (np.array, np.array):
+    def _cached_load(self, properties: dict=None) -> (np.array, np.array):
         """
         Loads a dataset, caching data as they are preprocessed.
         If cached preprocessed data exists, load it instead of preprocessing the original data.
-        :param verbosity: Prints every [verbosity] data loads
+        :param properties: dict type containing all relevant flags and variables for the handler
         :return: numpy arrays of the training and test sets
         """
+        if not properties:
+            properties = {}
         if type(self.dataset_path) in [str, Path]:
             if os.path.isdir(self.dataset_path):
-                return self.handlers[type(self.dataset_path)](verbosity)
+                return self.handlers[type(self.dataset_path)](properties)
             elif os.path.isfile(self.dataset_path):
                 path_to, filename = os.path.split(self.dataset_path)
                 basefilename, ext = os.path.splitext(filename)
-                return self.handlers[ext](verbosity)
+                return self.handlers[ext[1:]](properties)
 

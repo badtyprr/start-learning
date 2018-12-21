@@ -2,6 +2,7 @@
 
 # Python Packages
 from abc import ABC, abstractmethod
+import os
 # 3rd Party Packages
 import pandas as pd
 # User Packages
@@ -12,6 +13,7 @@ class CSVDatasetMixin(Dataset, ABC):
         super().__init__(*args, **kwargs)
         # Flag using Pandas dataframe
         self._pandas = True
+        self._dataframe = None
         # Add handler for files
         self.handlers['csv'] = self._csv_handler
 
@@ -23,17 +25,27 @@ class CSVDatasetMixin(Dataset, ABC):
         :param properties:
         :return:
         """
-        if not properties:
+        if properties is None:
             properties = {}
-        self.dataframe = pd.read_csv(self.dataset_path)
+        self.load_dataframe()
         # The inheriting class will need to implement the actual data load
+
+    def load_dataframe(self):
+        self.dataframe = pd.read_csv(self.dataset_path)
 
     @property
     def dataframe(self) -> pd.DataFrame:
-        return self.dataframe
+        if self._dataframe is None:
+            if os.path.isfile(self.dataset_path):
+                filepath, ext = os.path.splitext(self.dataset_path)
+                if ext[1:] == 'csv':
+                    self.load_dataframe()
+        return self._dataframe
 
     @dataframe.setter
     def dataframe(self, df: pd.DataFrame):
         if isinstance(df, pd.DataFrame):
-            self.dataframe = df
+            self._dataframe = df
+        else:
+            raise ValueError('dataframe must be a pandas dataframe')
 

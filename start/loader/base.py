@@ -8,12 +8,12 @@ import os
 import numpy as np
 
 class Dataset(ABC):
-    def __init__(self, dataset_path: Path, preprocessors: list=None):
+    def __init__(self, dataset_path: Path, preprocessors: list=None, subdirectory: Path=''):
         if not preprocessors:
             self.preprocessors = []
         else:
             self.preprocessors = preprocessors
-
+        self.subdirectory = subdirectory
         self.handlers = {
             Path:   self._directory_handler,
             str:    self._directory_handler
@@ -89,7 +89,12 @@ class CachedDataset(Dataset):
             self._cache_folder_name = r'.cache'
             self._ignored_labels.append(self._cache_folder_name)
             # Defaults to dataset_path/cache
-            self.cache_path = os.path.join(self.dataset_path, self._cache_folder_name)
+            if os.path.isfile(self.dataset_path):
+                path_to, filename = os.path.split(self.dataset_path)
+                self.cache_path = os.path.join(path_to, self._cache_folder_name)
+            else:
+                self.cache_path = os.path.join(self.dataset_path, self._cache_folder_name)
+
 
         # Check for a handler
         if any(isinstance(self.cache_path, t) for t in self.handlers.keys()):
@@ -131,11 +136,11 @@ class CachedDataset(Dataset):
         pass
 
     @abstractmethod
-    def _cached_load(self, verbosity: int=-1):
+    def _cached_load(self, properties:dict=None):
         """
         Loads a dataset, caching data as they are preprocessed.
         If cached preprocessed data exists, load it instead of preprocessing the original data.
-        :param verbosity: Prints every [verbosity] data loads
+        :param properties: dict type containing all parameters for the handler
         :return: variable type data
         """
         pass
@@ -175,14 +180,16 @@ class CachedDataset(Dataset):
         """
         self._cached_store(key, data)
 
-    def load(self, verbosity: int=-1):
+    def load(self, properties: dict=None):
         """
         Loads a dataset and returns as numpy arrays
         Implements parent class' abstract method.
-        :param verbosity: Prints status every [verbosity] data loads
+        :param properties: dict type that contains all parameters for the handler
         :return: numpy arrays of the training and test sets
         """
-        return self._cached_load(verbosity)
+        if properties is None:
+            properties = {}
+        return self._cached_load(properties)
 
     def clean(self, properties: dict):
         """
