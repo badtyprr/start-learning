@@ -18,6 +18,37 @@ class ImageCachedDataset(CachedDataset, CSVDatasetMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    def _csv_handler(self, properties: dict=None) -> (np.array, np.array):
+        # Loads pandas dataframe into self.dataframe
+        super()._csv_handler(properties)
+        # Implements data loading
+        return self._cached_csv_handler(properties)
+
+    def _cached_csv_handler(self, properties: dict=None) -> (np.array, np.array):
+        i = 0
+        data = []
+        labels = []
+        for index, row in self.dataframe.iterrows():
+            if row['Id'] in self._ignored_labels:
+                continue
+
+            image = self._cached_retrieve(
+                Path(os.path.join(self.dataset_path, properties.get('subdirectory', ''), row['Image']))
+            )
+            if image is None:
+                continue
+            # Add to data and labels
+            data.append(image)
+            labels.append(row['Id'])
+            i += 1
+
+            # Update every 'verbosity' images
+            verbosity = properties.get('verbosity', -1)
+            if verbosity > 0 and i % verbosity == 0:
+                print("[INFO] processed {}/{} images".format(i, self.dataframe.shape[0]))
+
+        return np.array(data), np.array(labels)
+
     def _cached_directory_handler(self, verbosity: int) -> (np.array, np.array):
         """
         When dataset path is a directory, treat it as a folder structured labeling system
@@ -56,8 +87,8 @@ class ImageCachedDataset(CachedDataset, CSVDatasetMixin):
             # Not a directory, and therefore, not a label
             except (FileNotFoundError, NotADirectoryError):
                 pass
-        return_val = (np.array(data), np.array(labels))
-        return return_val
+
+        return np.array(data), np.array(labels)
 
     def _cached_retrieve(self, key: Path) -> np.array:
         """
@@ -174,5 +205,11 @@ class ImageCachedDataset(CachedDataset, CSVDatasetMixin):
         :param verbosity: Prints every [verbosity] data loads
         :return: numpy arrays of the training and test sets
         """
-        return self.handlers[type(self.dataset_path)](verbosity)
+        if type(self.dataset_path) in [str, Path]:
+            if os.path.isdir(self.dataset_path):
+                return self.handlers[type(self.dataset_path)](verbosity)
+            elif os.path.isfile(self.dataset_path):
+                path_to, filename = os.path.split(self.dataset_path)
+                basefilename, ext = os.path.splitext(filename)
+                return self.handlers[ext](verbosity)
 
