@@ -3,4 +3,9 @@
 from .base import DescriptorFeature
 
 class ShapeDescriptor(DescriptorFeature):
-    pass
+    def __init__(self):
+        super().__init__()
+
+    #
+    def summarize(data):
+        pass
