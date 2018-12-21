@@ -43,7 +43,8 @@ class ImageCachedDataset(CachedDataset, CSVDatasetMixin):
                         image = self._cached_retrieve(
                             Path(os.path.join(root, file))
                         )
-
+                        if image is None:
+                            continue
                         # Add to data and labels
                         data.append(image)
                         labels.append(label)
@@ -78,6 +79,8 @@ class ImageCachedDataset(CachedDataset, CSVDatasetMixin):
             except FileExistsError:
                 pass
             image = cv2.imread(str(key), cv2.IMREAD_UNCHANGED)
+            if image is None:
+                return image
             preprocessor_path = label_path
             for p in self.preprocessors:
                 preprocessor_path = os.path.join(preprocessor_path, str(p))
@@ -118,7 +121,7 @@ class ImageCachedDataset(CachedDataset, CSVDatasetMixin):
         setRemove = set()
 
         if properties.get('duplicate', False):
-            for root, dirs, files in os.walk(properties['input']):
+            for root, dirs, files in os.walk(self.dataset_path):
                 for file in files:
                     filepath = os.path.join(root, file)
                     # Read file stats (size)
@@ -129,6 +132,8 @@ class ImageCachedDataset(CachedDataset, CSVDatasetMixin):
                     if image is None:
                         # Mark for removal
                         setRemove.add(filepath)
+                        # TODO: Remove cached images too, maybe a _cached_remove and _remove methods?
+                        # TODO: For that matter, an _add and _cached_add ?
                         continue
                     hist = quantized_histogram(image)
                     hashable_key = (stats.st_size, tuple(hist))
@@ -157,7 +162,8 @@ class ImageCachedDataset(CachedDataset, CSVDatasetMixin):
         # Combined removal
         for item_path in setRemove:
             try:
-                os.remove(item_path)
+                if not properties.get('dry-run', False):
+                    os.remove(item_path)
             except FileNotFoundError:
                 print('[WARNING] Could not find file: {}'.format(item_path))
 
