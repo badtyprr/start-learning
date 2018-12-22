@@ -40,7 +40,7 @@ class ImageCachedDataset(CachedDataset, CSVDatasetMixin):
             if row['Id'] in self._ignored_labels:
                 continue
             image_path = Path(os.path.join(path_to, self.subdirectory, row['Image']))
-            image = self._cached_retrieve(image_path)
+            image = self._cached_retrieve(image_path, label_directories=Path(row['Id']))
             if image is None:
                 print('[WARNING] {} could not be read, skipping...'.format(image_path))
                 continue
@@ -97,14 +97,15 @@ class ImageCachedDataset(CachedDataset, CSVDatasetMixin):
 
         return np.array(data), np.array(labels)
 
-    def _cached_retrieve(self, key: Path) -> np.array:
+    def _cached_retrieve(self, key: Path, label_directories: Path=None) -> np.array:
         """
         Retrieves a data sample from the datastore using key, preprocesses the data and caches the result
         :param key: str type representing the unique identifier that can store the data sample
         :return: numpy array representing an image
         """
         key_path, filename = os.path.split(key)
-        label_directories = os.path.relpath(key_path, os.path.commonprefix([self.dataset_path, key_path]))
+        if label_directories is None:
+            label_directories = os.path.relpath(key_path, os.path.commonprefix([self.dataset_path, key_path]))
         label_path = os.path.join(self.cache_path, self.subdirectory, label_directories)
         preprocessor_path = label_path
         for p in self.preprocessors:
