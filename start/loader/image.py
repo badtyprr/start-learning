@@ -15,6 +15,13 @@ from ..utils import quantized_histogram
 
 
 class ImageCachedDataset(CachedDataset, CSVDatasetMixin):
+    """
+    ImageCachedDataset reads images from a directory or CSV
+    :param dataset_path: Path type representing the path to a directory or CSV
+    :param subdirectory: Path type used with CSVs if the images are in a directory different from the CSV file
+    :param preprocessors: list type representing Preprocessor types to operate on the images in sequential order
+    :param cache_path: Path type representing the path to a caching directory
+    """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -32,11 +39,10 @@ class ImageCachedDataset(CachedDataset, CSVDatasetMixin):
         for index, row in self._dataframe.iterrows():
             if row['Id'] in self._ignored_labels:
                 continue
-
-            image = self._cached_retrieve(
-                Path(os.path.join(path_to, self.subdirectory, row['Image']))
-            )
+            image_path = Path(os.path.join(path_to, self.subdirectory, row['Image']))
+            image = self._cached_retrieve(image_path)
             if image is None:
+                print('[WARNING] {} could not be read, skipping...'.format(image_path))
                 continue
             # Add to data and labels
             data.append(image)
@@ -99,7 +105,7 @@ class ImageCachedDataset(CachedDataset, CSVDatasetMixin):
         """
         key_path, filename = os.path.split(key)
         label_directories = os.path.relpath(key_path, os.path.commonprefix([self.dataset_path, key_path]))
-        label_path = os.path.join(self.cache_path, label_directories)
+        label_path = os.path.join(self.cache_path, self.subdirectory, label_directories)
         preprocessor_path = label_path
         for p in self.preprocessors:
             preprocessor_path = os.path.join(preprocessor_path, str(p))
