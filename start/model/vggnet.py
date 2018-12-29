@@ -12,6 +12,15 @@ class MiniVGGNet(NeuralNetwork):
 
     @staticmethod
     def build(properties: dict):
+        """
+        Builds a MiniVGGNet model
+        :param properties: dict type that represents the model parameters:
+            'width': int type representing the horizontal resolution
+            'height': int type representing the vertical resolution
+            'channels': int type representing the number of color channels, 1 for monochrome
+            'classes': int type representing the number of classes to predict
+        :return:
+        """
         model = Sequential()
         # Align dimensions depending on channels_first or last
         channelDimension = -1   # end of the shape tuple
