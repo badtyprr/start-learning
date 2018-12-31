@@ -24,7 +24,10 @@ class ImagePreprocessor(Preprocessor):
         super().__init__()
         self.name = 'ImagePreprocessor'
 
+    @abstractmethod
+    def preprocess_image(self, image: np.array) -> np.array:
+        pass
+
     def preprocess(self, data: np.array) -> np.array:
-        # Do nothing by default
-        return data
+        return self.preprocess_image(data)
 

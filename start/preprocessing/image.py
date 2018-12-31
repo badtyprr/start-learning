@@ -18,10 +18,32 @@ class ImageToTensorPreprocessor(ImagePreprocessor):
         # store the image data format
         self.dataFormat = dataFormat
 
-    def preprocess(self, data: np.array):
+    def preprocess_image(self, image: np.array) -> np.array:
         # Rearrange the dimensions of the image and flatten
-        return img_to_array(data, data_format=self.dataFormat)
+        return img_to_array(image, data_format=self.dataFormat)
 
+class CropPreprocessor(ImagePreprocessor):
+    def __init__(
+            self,
+            width: int,
+            height: int,
+            split: bool=False):
+        """
+        Crops an image to width and height.
+        If split is specified, splits the image into 5 images: 4 corners and center.
+        :param width: int type representing the horizontal resolution
+        :param height: int type representing the vertical resolution
+        :param split: bool type indicating whether to split the image into crops
+        """
+        self.width = width
+        self.height = height
+        self.split = split
+
+        def crop(self, image: np.array) -> np.array:
+            pass
+
+        def preprocess_image(self, image: np.array) -> np.array:
+            return self.crop(image)
 
 class ResizePreprocessor(ImagePreprocessor):
     def __init__(
@@ -37,12 +59,11 @@ class ResizePreprocessor(ImagePreprocessor):
         self.interpolation = interpolation
         self.aspect_preserving = aspect_preserving
 
-    @classmethod
-    def resize(
+    def _resize(
             self, image: np.array,
             width: int=0, height: int=0,
             interpolation: int=cv2.INTER_AREA,
-            keep_aspect=False):
+            keep_aspect: bool=False):
         """
         Resizes an image to widthxheight with interpolation and the
         option to keep aspect ratio
@@ -50,37 +71,37 @@ class ResizePreprocessor(ImagePreprocessor):
         :param width: Width in pixels
         :param height: Height in pixels
         :param interpolation: OpenCV interpolation type, defaults to INTER_AREA
-        :param keep_aspect: Keep aspect ratio or not
         :return: The resized image
         """
         # Without a width or height specification, return input
         if not (width or height):
             return image
+
         # Preprocess image to preserve aspect before resize
-        elif keep_aspect:
+        if self.aspect_preserving:
             (h, w) = image.shape[:2]
             dW = 0
             dH = 0
             # Shortest dimension is width?
             if w < h:
                 # Resize to the width dimension
-                scaleFactor = float(width) / w
+                scale_factor = float(width) / w
                 image = cv2.resize(
                     image,
                     dsize=None,
-                    fx=scaleFactor,
-                    fy=scaleFactor
+                    fx=scale_factor,
+                    fy=scale_factor
                 )
                 dH = int((image.shape[0] - height) / 2.0)
             # Shortest dimension is height
             else:
                 # Resize to the height dimension
-                scaleFactor = float(height) / h
+                scale_factor = float(height) / h
                 image = cv2.resize(
                     image,
                     dsize=None,
-                    fx=scaleFactor,
-                    fy=scaleFactor
+                    fx=scale_factor,
+                    fy=scale_factor
                 )
                 dW = int((image.shape[1] - width) / 2.0)
             # Center crop
@@ -93,18 +114,12 @@ class ResizePreprocessor(ImagePreprocessor):
             interpolation=interpolation
         )
 
-
     def preprocess(self, data: np.array):
-        if self.aspect_preserving:
-            return self.resize(data,
-                               self.width, self.height,
-                               self.interpolation,
-                               keep_aspect=True)
-        else:
-            return self.resize(data,
-                               self.width, self.height,
-                               self.interpolation,
-                               keep_aspect=False)
+        return self._resize(
+            data,
+            self.width, self.height,
+            self.interpolation
+        )
 
 
 class ColorSpacePreprocessor(ImagePreprocessor):
