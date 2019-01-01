@@ -29,5 +29,14 @@ class ImagePreprocessor(Preprocessor):
         pass
 
     def preprocess(self, data: np.array) -> np.array:
-        return self.preprocess_image(data)
+        # Single image
+        if len(data.shape) == 3:
+            return self.preprocess_image(data)
+        # Batch
+        if len(data.shape) == 4:
+            images = []
+            for image in data:
+                image = self.preprocess_image(image)
+                images.append(image)
+            return np.vstack(images)
 

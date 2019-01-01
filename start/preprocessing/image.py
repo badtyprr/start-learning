@@ -40,7 +40,9 @@ class CropPreprocessor(ImagePreprocessor):
         self.split = split
 
         def crop(self, image: np.array) -> np.array:
-            pass
+            # Split the image into 5 crops, 4 corners and 1 center crop
+            if self.split:
+
 
         def preprocess_image(self, image: np.array) -> np.array:
             return self.crop(image)
