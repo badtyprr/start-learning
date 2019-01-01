@@ -135,7 +135,7 @@ class ImageCachedDataset(CachedDataset, CSVDatasetMixin):
         # Return the final preprocessed image
         return image
 
-    def _cached_store(self, key: Path, data):
+    def _cached_store(self, key: Path, data: np.array):
         """
         Stores an image in the datastore.
         :param key: Path type representing the filepath
