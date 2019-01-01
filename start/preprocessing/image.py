@@ -40,9 +40,26 @@ class CropPreprocessor(ImagePreprocessor):
         self.split = split
 
         def crop(self, image: np.array) -> np.array:
-            # Split the image into 5 crops, 4 corners and 1 center crop
+            crops = []
+            # Center crop
+            (h, w) = image.shape[:2]
+            dW = int((w - width) / 2.0)
+            dH = int((h - height) / 2.0)
+            assert dW >= 0, 'crop width ({}) is greater than the original image width ({})'.format(width, w)
+            assert dH >= 0, 'crop height ({}) is greater than the original image height({})'.format(height, h)
+            crops.append(image[dH:h - dH, dW:w - dW])
+            # Also split into 4 corners
             if self.split:
-
+                # Upper left
+                crops.append(image[0:height, 0:width])
+                # Upper right
+                crops.append(image[0:height, w-width:w])
+                # Lower left
+                crops.append(image[h-height:h, 0:width])
+                # Lower right
+                crops.append(image[h-height:h, w-width:w])
+            # Return 1 or 5 crops
+            return np.array(crops)
 
         def preprocess_image(self, image: np.array) -> np.array:
             return self.crop(image)
@@ -107,7 +124,6 @@ class ResizePreprocessor(ImagePreprocessor):
                 )
                 dW = int((image.shape[1] - width) / 2.0)
             # Center crop
-            (h, w) = image.shape[:2]
             image = image[dH:h - dH, dW:w - dW]
         # Resize the image according to the provided width and height
         return cv2.resize(

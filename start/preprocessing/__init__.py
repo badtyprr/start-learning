@@ -1,2 +1,2 @@
 from .base import Preprocessor, ImagePreprocessor
-from .image import ImageToTensorPreprocessor, ResizePreprocessor, ColorSpacePreprocessor
+from .image import ImageToTensorPreprocessor, ResizePreprocessor, ColorSpacePreprocessor, CropPreprocessor
