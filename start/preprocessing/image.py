@@ -1,5 +1,7 @@
 # Preprocessors that apply matrix shaping operations
 
+# Python Packages
+from typing import Union
 # 3rd Party Packages
 from tensorflow.keras.preprocessing.image import img_to_array
 import numpy as np
@@ -25,39 +27,53 @@ class ImageToTensorPreprocessor(ImagePreprocessor):
 class CropPreprocessor(ImagePreprocessor):
     def __init__(
             self,
-            width: int,
-            height: int,
+            width: Union[int, float],
+            height: Union[int, float],
             split: bool=False):
         """
         Crops an image to width and height.
         If split is specified, splits the image into 5 images: 4 corners and center.
-        :param width: int type representing the horizontal resolution
-        :param height: int type representing the vertical resolution
+        :param width: Union[int, float] type representing the [horizontal resolution, horizontal % of the frame to include in crop]
+        :param height: Union[int, float] type representing the [vertical resolution, vertical % of the frame to include in crop]
         :param split: bool type indicating whether to split the image into crops
         """
+        # Absolute resolution or percentage-based dimensions
+        if isinstance(width, int):
+            self._absolute = True
+        else:
+            self._absolute = False
         self.width = width
         self.height = height
+        # Crop 5 or 1
         self.split = split
 
         def crop(self, image: np.array) -> np.array:
             crops = []
             # Center crop
-            (h, w) = image.shape[:2]
-            dW = int((w - width) / 2.0)
-            dH = int((h - height) / 2.0)
-            assert dW >= 0, 'crop width ({}) is greater than the original image width ({})'.format(width, w)
-            assert dH >= 0, 'crop height ({}) is greater than the original image height({})'.format(height, h)
-            crops.append(image[dH:h - dH, dW:w - dW])
+            (image_height, image_width) = image.shape[:2]
+            # Absolute pixel dimensions
+            if self._absolute:
+                crop_width = self.width
+                crop_height = self.height
+            # Percentage-based pixel dimensions
+            else:
+                crop_width = self.width * image_width
+                crop_height = self.height * image_height
+            dW = int((image_width - crop_width) / 2.0)
+            dH = int((image_height - crop_height) / 2.0)
+            assert dW >= 0, 'crop width ({}) is greater than the original image width ({})'.format(crop_width, image_width)
+            assert dH >= 0, 'crop height ({}) is greater than the original image height({})'.format(crop_height, image_height)
+            crops.append(image[dH:image_height - dH, dW:image_width - dW])
             # Also split into 4 corners
             if self.split:
                 # Upper left
-                crops.append(image[0:height, 0:width])
+                crops.append(image[0:crop_height, 0:crop_width])
                 # Upper right
-                crops.append(image[0:height, w-width:w])
+                crops.append(image[0:crop_height, image_width-crop_width:image_width])
                 # Lower left
-                crops.append(image[h-height:h, 0:width])
+                crops.append(image[image_height-crop_height:image_height, 0:crop_width])
                 # Lower right
-                crops.append(image[h-height:h, w-width:w])
+                crops.append(image[image_height-crop_height:image_height, image_width-crop_width:image_width])
             # Return 1 or 5 crops
             return np.array(crops)
 
