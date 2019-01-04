@@ -1,4 +1,39 @@
 # Base class
+#
+# Dataset (holds a catalog and responsible for control logic between classes)
+#
+# Catalog (handles data location, label, bounding box information, etc.)
+# |- DirectoryCatalog (handles directory structured data)
+# |- CSVCatalog (handles CSV structured data)
+#
+# ByteStream
+# |- InputStream (handles the byte retrieval from the data source)
+#   |- FileInputStream (handles byte streams from a file)
+#   |- MemoryInputStream (handles byte streams from a bytearray)
+#   ... there could be lots of others
+# |- OutputStream (handles the byte storage to a data source)
+#   |- FileOutputStream (handles byte streams to a file)
+#     |- HDF5OutputStream (handles byte streams to an HDF5 file)
+#   |- MemoryOutputStream (handles byte streams to memory)
+#
+# Decoder (handles decoding of a ByteStream into a format processable by TensorFlow)
+# |- ImageDecoder (handles decoding into an image array, but how to handle different file formats when decoupled from the ByteStream?)
+# ... there could be lots of others
+#
+# Preprocessor (handles preprocessing as a chain of preprocessors, taking in one or more samples per iteration)
+# |- ResizePreprocessor
+# |- ImageToTensorPreprocessor
+# |- ColorSpacePreprocessor
+# |- CropPreprocessor
+# ... there could be lots of others
+#
+# Writer (handles the logistics of storing samples to a storage medium)
+# |- HDF5Writer (handles logistics of writing data to an HDF5 file for larger datasets)
+# |- DirectoryWriter (handles logistics of writing data in a directory hierarchy, usually coupled with a FileOutputStream or subclass of such)
+# ... there could be lots of others
+#
+
+
 
 # Python Packages
 from abc import ABC, abstractmethod

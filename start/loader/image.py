@@ -83,7 +83,7 @@ class ImageCachedDataset(CachedDataset, CSVDatasetMixin):
                         )
                         if image is None:
                             continue
-                        # Add to data and labels
+                        # Convert data and labels
                         data.append(image)
                         labels.append(label)
                         i += 1
@@ -129,6 +129,7 @@ class ImageCachedDataset(CachedDataset, CSVDatasetMixin):
                     key=Path(os.path.join(preprocessor_path, filename)),
                     data=image
                 )
+
         # Check that the shape is at least rank 3
         if len(image.shape) < 3:
             image = image[:,:,np.newaxis]
