@@ -1,5 +1,3 @@
-# Base class
-#
 # Dataset (holds a catalog and responsible for control logic between classes)
 #
 # Catalog (handles data location, label, bounding box information, etc.)
@@ -32,205 +30,84 @@
 # |- DirectoryWriter (handles logistics of writing data in a directory hierarchy, usually coupled with a FileOutputStream or subclass of such)
 # ... there could be lots of others
 #
+# Filter (filters what types of data a class can handle)
 
-
-
-# Python Packages
+# Python Libraries
 from abc import ABC, abstractmethod
+from typing import List, Tuple, Callable, Union
 from pathlib import Path
-import os
-# 3rd Party Packages
+# 3rd Party Libraries
 import numpy as np
+# User Libraries
+from ..preprocessing import Preprocessor
+
+# Types
+input_handler_t = Callable[..., Tuple[...]]
+output_handler_t = Callable[..., int]
+preprocessors_t = List[Preprocessor]
+catalog_t = Union[str, Path]
+content_t = Tuple[...]
 
 class Dataset(ABC):
-    def __init__(self, dataset_path: Path, preprocessors: list=None, subdirectory: Path=''):
-        if not preprocessors:
-            self.preprocessors = []
-        else:
-            self.preprocessors = preprocessors
-        self.subdirectory = subdirectory
-        self.handlers = {
-            Path:   self._directory_handler,
-            str:    self._directory_handler
-        }
+    def __init__(self, input_handler: input_handler_t, catalog: catalog_t, output_handler: output_handler_t=None, preprocessors: preprocessors_t=None):
+        self._input_handler = input_handler
+        self._catalog = catalog
+        self._output_handler = output_handler
+        self._preprocessors = preprocessors
 
-        self.dataset_path = dataset_path
-        self._ignored_labels = []
+    @property
+    def input_handler(self) -> input_handler_t:
+        return self._input_handler
 
-    @abstractmethod
-    def _directory_handler(self, directory: Path):
-        """
-        Handles the retrieval of a directory of data
-        :param directory: base directory of dataset
-        :return: variable type data
-        """
-        pass
+    @input_handler.setter
+    def input_handler(self, ih: input_handler_t):
+        if not isinstance(ih, input_handler_t):
+            raise ValueError('input_handler must be of type {}'.format(input_handler_t))
+        self._input_handler = ih
 
-    @abstractmethod
-    def retrieve(self, key):
-        """
-        Retrieves a data sample from the datastore using key and preprocesses the data
-        :param key: str type representing the unique identifier that can retrieve the data sample
-        :return: variable type data
-        """
-        pass
+    @property
+    def output_handler(self) -> output_handler_t:
+        return self._output_handler
 
-    @abstractmethod
-    def store(self, key, data):
-        """
-        Stores a data sample on the datastore
-        :param key: str type representing the unique identifier that can store the data sample
-        :param data: variable data type to store
-        """
-        pass
+    @output_handler.setter
+    def output_handler(self, oh: output_handler_t):
+        if not isinstance(oh, output_handler_t):
+            raise ValueError('output_handler must be of type {}'.format(output_handler_t))
+        self._output_handler = oh
+
+    @property
+    def preprocessors(self) -> preprocessors_t:
+        return self._preprocessors
+
+    @preprocessors.setter
+    def preprocessors(self, p):
+        if not isinstance(p, preprocessors_t):
+            raise ValueError('preprocessors must be of type {}'.format(preprocessors_t))
+        self._preprocessors = p
 
     @abstractmethod
-    def load(self, verbosity: int=-1) -> (np.array, np.array):
+    def load(self, opts: dict) -> object:
         """
-        Loads a dataset and returns as numpy arrays
-        :param verbosity: Prints status every [verbosity] data loads
-        :return: numpy arrays of the training and test sets
+        Generator that loads all or part of a dataset
+        :return: subclass defined data
         """
-        # Check for path existence
-        if not any(isinstance(self.dataset_path, t) for t in self.handlers.keys()):
-            raise ValueError('No handler for dataset path')
+        yield
 
-    @abstractmethod
-    def clean(self, properties: dict):
+    def store(self, opts: dict):
         """
-        Cleans the dataset according to the properties given.
-        :param properties: dict type representing the parameters that define how a clean is implemented
+        Stores all or part of a dataset (optional)
         """
-        pass
+        raise NotImplementedError('store() is not implemented yet!')
 
-class CachedDataset(Dataset):
-    def __init__(self, cache_path: Path=None, *args, **kwargs):
+    def clean(self):
         """
-        A CachedDataset is assumed to be cached on disk at a cache path.
-        A folder structure is made for each preprocessor and its preprocessor output cached.
-        :param cache_path: Path type representing a directory to cache preprocessor outputs to
-        :param args:
-        :param kwargs:
+        Frees up memory from loaded data (optional)
         """
-        super().__init__(*args, **kwargs)
+        raise NotImplementedError('clean() is not implemented yet!')
 
-        # Setup the cached directory path
-
-        if cache_path:
-            path_to, self._cache_folder_name = os.path.split(cache_path)
-            self.cache_path = cache_path
-        else:
-            # Ignore when reading labels
-            self._cache_folder_name = r'.cache'
-            self._ignored_labels.append(self._cache_folder_name)
-            # Defaults to dataset_path/cache
-            if os.path.isfile(self.dataset_path):
-                path_to, filename = os.path.split(self.dataset_path)
-                self.cache_path = os.path.join(path_to, self._cache_folder_name)
-            else:
-                self.cache_path = os.path.join(self.dataset_path, self._cache_folder_name)
-
-
-        # Check for a handler
-        if any(isinstance(self.cache_path, t) for t in self.handlers.keys()):
-            if os.path.exists(self.cache_path):
-                if not os.path.isdir(self.cache_path):
-                    ValueError('cache_path must be a directory path')
-            else:
-                # Create directory path
-                print('[WARNING] cache_path does not exist and will be created')
-                os.makedirs(self.cache_path)
-        else:
-            raise ValueError('cache_path must be a directory path')
-
-    @abstractmethod
-    def _cached_directory_handler(self, directory: Path):
+    def reset(self):
         """
-        When dataset path is a directory, treat it as a folder structured labeling system
-        :param directory: Path type representing a directory of data samples
-        :return: variable type data
+        Resets the load generator to the first dataset entry (optional)
         """
-        pass
-
-    @abstractmethod
-    def _cached_retrieve(self, key: Path):
-        """
-        Retrieves a data sample from the datastore using key, preprocesses the data and caches the result
-        :param key: str type representing the unique identifier that can store the data sample
-        :return: variable type data
-        """
-        pass
-
-    @abstractmethod
-    def _cached_store(self, key: Path, data):
-        """
-        Stores a data sample on the datastore. Same functionality as Dataset.store().
-        :param key: str type representing the unique identifier that can store the data sample
-        :param data: variable data type to store
-        """
-        pass
-
-    @abstractmethod
-    def _cached_load(self, properties:dict=None):
-        """
-        Loads a dataset, caching data as they are preprocessed.
-        If cached preprocessed data exists, load it instead of preprocessing the original data.
-        :param properties: dict type containing all parameters for the handler
-        :return: variable type data
-        """
-        pass
-
-    @abstractmethod
-    def _cached_clean(self, properties: dict):
-        """
-        Cleans the dataset according to the properties given. Also cleans the cached images, if they exist.
-        :param properties: dict type representing parameters to execute during cleaning
-        """
-        pass
-
-    def _directory_handler(self, directory: Path):
-        """
-        Handles the retrieval of a directory of data
-        Implements parent class' abstract method.
-        :param directory: base directory of dataset
-        :return: variable type data
-        """
-        return self._cached_directory_handler(directory)
-
-    def retrieve(self, key):
-        """
-        Retrieves a data sample from the datastore using key and preprocesses the data.
-        Implements parent class' abstract method.
-        :param key: str type representing the unique identifier that can retrieve the data sample
-        :return: variable type data
-        """
-        return self._cached_retrieve(key)
-
-    def store(self, key, data):
-        """
-        Stores a data sample on the datastore.
-        Implements parent class' abstract method.
-        :param key: str type representing the unique identifier that can store the data sample
-        :param data: variable data type to store
-        """
-        self._cached_store(key, data)
-
-    def load(self, properties: dict=None):
-        """
-        Loads a dataset and returns as numpy arrays
-        Implements parent class' abstract method.
-        :param properties: dict type that contains all parameters for the handler
-        :return: numpy arrays of the training and test sets
-        """
-        if properties is None:
-            properties = {}
-        return self._cached_load(properties)
-
-    def clean(self, properties: dict):
-        """
-        Cleans the dataset according to the properties given.
-        Implements parent class' abstract method.
-        :param properties: dict type representing the parameters that define how a clean is implemented
-        """
-        self._cached_clean(properties)
+        raise NotImplementedError('reset() is not implemented yet!')
 
