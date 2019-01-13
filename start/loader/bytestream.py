@@ -126,6 +126,8 @@ class FileInputStream(InputStream):
         :param file: type Union[IOBase, str, Path] representing a file pointer, or path to the file, respectively
         """
         self._file = file
+        # Convert a path to a file descriptor, if necessary
+        self._to_file_descriptor()
 
     @property
     def file(self):
@@ -135,19 +137,32 @@ class FileInputStream(InputStream):
     def file(self, f):
         _validate_types(f=Union[file_t, path_t])
         self._file = f
+        # Convert a path to a file descriptor, if necessary
+        self._to_file_descriptor()
+
+    @classmethod
+    def _to_file_descriptor(cls):
+        try:
+            # Do nothing if it's already a descriptor
+            _validate_types(cls._file, IOBase)
+        except TypeError:
+            # Open the (possible) path
+            try:
+                cls._file = open(cls._file, 'rb')
+            except FileNotFoundError:
+                raise TypeError('_file is neither a path, nor a file descriptor')
+
+    @classmethod
+    def _reopen_file_descriptor(cls):
+        print('WARNING: file was closed before access, reopening...')
+        cls._file = open(cls._file.name, cls._file.mode)
 
     def close(self) -> bool:
         """
         Closes the stream and releases system resources
         :return: bool type representing True if successful
         """
-        # Try to close a file descriptor
-        try:
-            self._file.close()
-        except AttributeError:
-            # Not a file descriptor
-            return False
-        # Closed file descriptor
+        self._file.close()
         return True
 
     def available(self) -> int:
@@ -155,16 +170,16 @@ class FileInputStream(InputStream):
         Estimates the number of bytes available to read.
         :return: int type representing the best estimate of the number of bytes available to read
         """
+        # Try file descriptor
         try:
-            return os.stat(self._file).st_size
-        except FileNotFoundError:
-            # Try file descriptor
             marker = self._file.tell()
-            available_bytes = self._file.seek(0, os.SEEK_END)
-            self._file.seek(marker)
-            return available_bytes
-        except AttributeError:
-            raise TypeError('_file is neither a path, nor a file descriptor')
+        except ValueError:
+            # If the file descriptor was closed, open it again
+            marker = 0
+            self._reopen_file_descriptor()
+        available_bytes = self._file.seek(0, os.SEEK_END)
+        self._file.seek(marker)
+        return available_bytes
 
     def read(self, buffer: ByteString, bytes: int, offset: int = 0):
         """
@@ -174,16 +189,13 @@ class FileInputStream(InputStream):
         :param offset: int type representing the number of bytes to offset the read
         """
         # Don't write past the bytearray buffer, although Python will technically do it
-        bytes = min(len(buffer), bytes)
+        bytes = min(len(buffer), bytes, self.available())
         try:
             buffer[:] = self._file.read(bytes)
-        except AttributeError:
-            # Not a file descriptor, try to open the path
-            fd = open(self._file, 'rb')
-            buffer[:] = fd.read(bytes)
-            fd.close()
-        except FileNotFoundError:
-            raise TypeError('_file is neither a path, nor a file descriptor')
+        except ValueError:
+            # Try to reopen the file descriptor
+            self._reopen_file_descriptor()
+            buffer[:] = self._file.read(bytes)
 
 
 class FileOutputStream(OutputStream):
