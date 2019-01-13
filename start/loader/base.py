@@ -40,13 +40,14 @@ from pathlib import Path
 import numpy as np
 # User Libraries
 from ..preprocessing import Preprocessor
+from ..utils import _validate_types, deferrableabstractmethod
 
 # Types
-input_handler_t = Callable[..., Tuple[...]]
+content_t = Tuple[...]
+input_handler_t = Callable[..., content_t]
 output_handler_t = Callable[..., int]
 preprocessors_t = List[Preprocessor]
 catalog_t = Union[str, Path]
-content_t = Tuple[...]
 
 class Dataset(ABC):
     def __init__(self, input_handler: input_handler_t, catalog: catalog_t, output_handler: output_handler_t=None, preprocessors: preprocessors_t=None):
@@ -61,8 +62,7 @@ class Dataset(ABC):
 
     @input_handler.setter
     def input_handler(self, ih: input_handler_t):
-        if not isinstance(ih, input_handler_t):
-            raise ValueError('input_handler must be of type {}'.format(input_handler_t))
+        _validate_types(ih=input_handler_t)
         self._input_handler = ih
 
     @property
@@ -71,8 +71,7 @@ class Dataset(ABC):
 
     @output_handler.setter
     def output_handler(self, oh: output_handler_t):
-        if not isinstance(oh, output_handler_t):
-            raise ValueError('output_handler must be of type {}'.format(output_handler_t))
+        _validate_types(oh=output_handler_t)
         self._output_handler = oh
 
     @property
@@ -81,33 +80,46 @@ class Dataset(ABC):
 
     @preprocessors.setter
     def preprocessors(self, p):
-        if not isinstance(p, preprocessors_t):
-            raise ValueError('preprocessors must be of type {}'.format(preprocessors_t))
+        _validate_types(p=preprocessors_t)
         self._preprocessors = p
 
     @abstractmethod
-    def load(self, opts: dict) -> object:
+    def load(self, opts: dict) -> content_t:
         """
         Generator that loads all or part of a dataset
         :return: subclass defined data
         """
         yield
 
-    def store(self, opts: dict):
+    @deferrableabstractmethod
+    def store(self, opts: dict=None):
         """
         Stores all or part of a dataset (optional)
+        :param opts: dict type representing the parameters for the specific storage method
+        :return:
         """
-        raise NotImplementedError('store() is not implemented yet!')
+        pass
 
-    def clean(self):
+    @deferrableabstractmethod
+    def free(self):
         """
         Frees up memory from loaded data (optional)
         """
-        raise NotImplementedError('clean() is not implemented yet!')
+        pass
 
+    @deferrableabstractmethod
     def reset(self):
         """
         Resets the load generator to the first dataset entry (optional)
         """
-        raise NotImplementedError('reset() is not implemented yet!')
+        pass
+
+    @deferrableabstractmethod
+    def clean(self, opts: dict=None) -> int:
+        """
+        Cleans the dataset (e.g. removing duplicates, etc.)
+        :param opts: dict type representing parameters for the type of clean required
+        :return: int type representing the number of entries cleaned
+        """
+        pass
 
