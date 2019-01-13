@@ -1,4 +1,5 @@
 # Dataset (holds a catalog and responsible for control logic between classes)
+# |- ImageDataset
 #
 # Catalog (handles data location, label, bounding box information, etc.)
 # |- DirectoryCatalog (handles directory structured data)
@@ -50,7 +51,11 @@ preprocessors_t = List[Preprocessor]
 catalog_t = Union[str, Path]
 
 class Dataset(ABC):
-    def __init__(self, input_handler: input_handler_t, catalog: catalog_t, output_handler: output_handler_t=None, preprocessors: preprocessors_t=None):
+    def __init__(self,
+                 input_handler: input_handler_t,
+                 catalog: catalog_t,
+                 output_handler: output_handler_t=None,
+                 preprocessors: preprocessors_t=None):
         self._input_handler = input_handler
         self._catalog = catalog
         self._output_handler = output_handler
